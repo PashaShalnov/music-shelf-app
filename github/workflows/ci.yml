@@ -1,0 +1,62 @@
+# .github/workflows/ci.yml
+
+name: Flutter CI
+
+# Defines the triggers for this workflow.
+on:
+  # Run on pushes to any branch inside the 'feature/' directory.
+  # This provides fast feedback for developers on their feature branches.
+  push:
+    branches:
+      - 'feature/**'
+
+  # Run when a pull request is opened or updated that targets the 'develop' branch.
+  # This ensures that code is verified before it can be merged.
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build_and_test:
+    name: Build and Test
+    # The type of virtual machine to run the job on. 'ubuntu-latest' is a good default.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository's code.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Java, which is required by the Android toolchain (Gradle).
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Step 3: Set up the Flutter environment.
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Specify the Flutter version your project uses.
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          # Enable caching to speed up subsequent workflow runs.
+          cache: true
+
+      # Step 4: Install project dependencies.
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step 5: Check code formatting. The command exits with an error
+      # if any files need to be reformatted.
+      - name: Check formatting
+        run: flutter format --output=none --set-exit-if-changed .
+
+      # Step 6: Run the static analyzer to find potential code issues.
+      - name: Analyze project
+        run: flutter analyze
+
+      # Step 7: Run all unit and widget tests.
+      - name: Run tests
+        run: flutter test
